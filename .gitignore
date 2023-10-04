@@ -5,7 +5,6 @@ simulation/
 greybox_tmp/
 *.qsf
 *.bak
-*.qpf
 *.wlf
 *.qip
 *.rpt
