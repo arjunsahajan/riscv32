@@ -1,4 +1,4 @@
-module alu
+module alu // execution stage
 (
 	input clk,  															
 	input reset, wb_en_in,                             
@@ -104,9 +104,9 @@ module alu
 				
 				I_INSTRUCTIONS_JALR: alu_temp = pc_in + 32'd4;
 				
-				I_INSTRUCTIONS_LB_TO_LHU:
-				
-				I_INSTRUCTIONS_ADDI_TO_SRAI:
+//				I_INSTRUCTIONS_LB_TO_LHU:
+//				
+//				I_INSTRUCTIONS_ADDI_TO_SRAI:
 
 			endcase
 		end
