@@ -2,6 +2,9 @@ module riscv_top
 (
 	input clk,
 	input pre_pre_reset,
+	input [31: 0] iw,
+	input [31: 0] rs1_data_in,
+	input [31: 0] rs2_data_in,
 	
 	output [31: 0] alu_out
 );
@@ -18,6 +21,7 @@ module riscv_top
 	(
 		.clk(clk),
 		.reset(reset),
+		.iw_in(iw_in),
 		.rs1_data_in(rs1_data_in),
 		.rs2_data_in(rs2_data_in),
 		

@@ -6,7 +6,7 @@ module alu // execution stage
 	input [31:0] pc_in, iw_in, rs1_data_in, rs2_data_in,    
 	input w_en_in,                                          
 
-	output reg [31:0] alu_out, iw_out, pc_out,              
+	output [31:0] alu_out, iw_out, pc_out,              
 	output reg [4:0] wb_reg_out,
 	output wk_en_out,
 
@@ -32,12 +32,18 @@ module alu // execution stage
 	parameter OR_FUNCT3 = 3'b110;
 	parameter AND_FUNCT3 = 3'b111;
 	
+	parameter LB_FUNCT3 = 3'b000;
+	parameter LH_FUNCT3 = 3'b001;
+	parameter LW_FUNCT3 = 3'b010;
+	parameter LBU_FUNCT3 = 3'b011;
+	parameter LHU_FUNCT3 = 3'b100;
+	
 	parameter ADD_FUNCT7 = 7'b0000000;
 	parameter SUB_FUNCT7 = 7'b0100000;
 	parameter SRL_FUNCT7 = 7'b0000000;
 	parameter SRA_FUNCT7 = 7'b0100000;
 	
-	reg [31:0] alu_temp = 0;               
+	reg [31:0] alu_out_reg;               
 	wire [2:0] func3 = {iw_in[14:12]};     
 	wire [6:0] func7 = {iw_in[31:25]};      
 	wire [4:0] shamt = {iw_in[24:20]};      
@@ -54,61 +60,76 @@ module alu // execution stage
 						ADD_SUB_FUNCT3:                                                         
 							begin
 								case (func7)
-									ADD_FUNCT7: alu_temp = rs1_data_in + rs2_data_in; 
+									ADD_FUNCT7: alu_out_reg <= rs1_data_in + rs2_data_in; 
 									
-									SUB_FUNCT7: alu_temp = rs1_data_in - rs2_data_in;       
+									SUB_FUNCT7: alu_out_reg <= rs1_data_in - rs2_data_in;       
                            
-									default:    alu_temp = 32'b0;                     
+									default:    alu_out_reg <= 32'b0;                     
                         endcase
 							end
 							
-						SLL_FUNCT3: alu_temp = rs1_data_in << (rs2_data_in & 16'h1F);
+						SLL_FUNCT3: alu_out_reg <= rs1_data_in << (rs2_data_in & 16'h1F);
 						
 						SLT_FUNCT3:
 						begin
-						  if (signed'(rs1_data_in) < signed'(rs2_data_in))
-								 alu_temp = 32'd1;
+						  if (rs1_data_in < rs2_data_in)
+								 alu_out_reg <= 32'd1;
 							else
-								 alu_temp = 32'd0;
+								 alu_out_reg <= 32'd0;
 						end
 						
 						SLTU_FUNCT3:
 						begin
 							if (rs1_data_in < rs2_data_in)
-								 alu_temp = 32'd1;                                     
+								 alu_out_reg <= 32'd1;                                     
 							else
-								 alu_temp = 32'd0;
+								 alu_out_reg <= 32'd0;
 						end
 						
-						XOR_FUNCT3: rs1_data_in ^ rs2_data_in;
+						XOR_FUNCT3: alu_out_reg <= rs1_data_in ^ rs2_data_in;
 						
 						SRL_SRA_FUNCT3:
 						begin
-							case(funct7)
-								SRL_FUNCT7: alu_temp = rs1_data_in >> rs2_data_in;
+							case(func7)
+								SRL_FUNCT7: alu_out_reg <= rs1_data_in >> rs2_data_in;
 								
-								SRA_FUNCT7: alu_temp = rs1_data_in >>> rs2_data_in;
+								SRA_FUNCT7: alu_out_reg <= rs1_data_in >>> rs2_data_in;
 								
-								default:    alu_temp = 32'b0;
+								default:    alu_out_reg <= 32'b0;
 							endcase
 						end
 						
-						OR_FUNCT3: alu_temp = rs1_data_in | rs2_data_in;
+						OR_FUNCT3: alu_out_reg <= rs1_data_in | rs2_data_in;
 						
-						AND_FUNCT3: rs1_data_in & rs2_data_in;
+						AND_FUNCT3: alu_out_reg <= rs1_data_in & rs2_data_in;
 						
-						default: alu_temp = 32'b0; 
+						default: alu_out_reg <= 32'b0; 
 						
 					endcase
 				end
 				
-				I_INSTRUCTIONS_JALR: alu_temp = pc_in + 32'd4;
+				I_INSTRUCTIONS_JALR: alu_out_reg <= pc_in + 32'd4;
 				
-//				I_INSTRUCTIONS_LB_TO_LHU:
-//				
-//				I_INSTRUCTIONS_ADDI_TO_SRAI:
+				I_INSTRUCTIONS_LB_TO_LHU:
+				begin
+					case (func3)
+						  LB_FUNCT3: alu_out_reg = rs1_data_in + {{20{iw_in[31]}}, iw_in[31:20]};               // LB 
+						  LH_FUNCT3: alu_out_reg = rs1_data_in + {{20{iw_in[31]}}, iw_in[31:20]};               // LH 
+						  LW_FUNCT3: alu_out_reg = rs1_data_in + {{20{iw_in[31]}}, iw_in[31:20]};               // LW 
+						  LBU_FUNCT3: alu_out_reg = rs1_data_in + {{20{iw_in[31]}}, iw_in[31:20]};              // LBU 
+						  LHU_FUNCT3: alu_out_reg = rs1_data_in + {{20{iw_in[31]}}, iw_in[31:20]};              // LHU 
+						  default: alu_out_reg = 32'b0;                                                      
+					 endcase
+				end
 
+				I_INSTRUCTIONS_ADDI_TO_SRAI:
+				begin
+				
+				end
+				
 			endcase
 		end
 
+		assign alu_out = alu_out_reg;
+		
 endmodule
